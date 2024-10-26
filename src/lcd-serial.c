@@ -17,6 +17,7 @@
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdio.h>
 #include <stdint.h>
 #include <math.h>
 #include "clock.h"
@@ -57,41 +58,6 @@
  * this drives that code.
  */
  
-
-static void spi_setup(void)
-{
-	rcc_periph_clock_enable(RCC_SPI1);
-	/* For spi signal pins */
-	rcc_periph_clock_enable(RCC_GPIOA);
-	/* For spi mode select on the l3gd20 */
-	rcc_periph_clock_enable(RCC_GPIOE);
-
-	/* Setup GPIOE3 pin for spi mode l3gd20 select. */
-	gpio_mode_setup(GPIOE, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO3);
-	/* Start with spi communication disabled */
-	gpio_set(GPIOE, GPIO3);
-
-	/* Setup GPIO pins for AF5 for SPI1 signals. */
-	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE,
-			GPIO5 | GPIO6 | GPIO7);
-	gpio_set_af(GPIOA, GPIO_AF5, GPIO5 | GPIO6 | GPIO7);
-
-	//spi initialization;
-	spi_set_master_mode(SPI1);
-	spi_set_baudrate_prescaler(SPI1, SPI_CR1_BR_FPCLK_DIV_64);
-	spi_set_clock_polarity_0(SPI1);
-	spi_set_clock_phase_0(SPI1);
-	spi_set_full_duplex_mode(SPI1);
-	spi_set_unidirectional_mode(SPI1); /* bidirectional but in 3-wire */
-	spi_set_data_size(SPI1, SPI_CR2_DS_8BIT);
-	spi_enable_software_slave_management(SPI1);
-	spi_send_msb_first(SPI1);
-	spi_set_nss_high(SPI1);
-	//spi_enable_ss_output(SPI1);
-	spi_fifo_reception_threshold_8bit(SPI1);
-	SPI_I2SCFGR(SPI1) &= ~SPI_I2SCFGR_I2SMOD;
-	spi_enable(SPI1);
-}
 
 static void usart_setup(void)
 {
@@ -151,10 +117,6 @@ static void my_usart_print_int(uint32_t usart, int32_t value)
 	usart_send_blocking(usart, '\n');
 }
 
-static void clock_setup(void)
-{
-	rcc_clock_setup_hsi(&rcc_hsi_configs[RCC_CLOCK_HSI_64MHZ]);
-}
 
 #define GYR_RNW			(1 << 7) /* Write when zero */
 #define GYR_MNS			(1 << 6) /* Multiple reads when 1 */
@@ -173,11 +135,44 @@ static void clock_setup(void)
 #define GYR_OUT_X_L		0x28
 #define GYR_OUT_X_H		0x29
 
+static void spi_setup(void)
+{
+	rcc_periph_clock_enable(RCC_SPI1);
+	/* For spi signal pins */
+	rcc_periph_clock_enable(RCC_GPIOA);
+	/* For spi mode select on the l3gd20 */
+	rcc_periph_clock_enable(RCC_GPIOE);
+
+	/* Setup GPIOE3 pin for spi mode l3gd20 select. */
+	gpio_mode_setup(GPIOE, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO3);
+	/* Start with spi communication disabled */
+	gpio_set(GPIOE, GPIO3);
+
+	/* Setup GPIO pins for AF5 for SPI1 signals. */
+	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE,
+			GPIO5 | GPIO6 | GPIO7);
+	gpio_set_af(GPIOA, GPIO_AF5, GPIO5 | GPIO6 | GPIO7);
+
+	//spi initialization;
+	spi_set_master_mode(SPI1);
+	spi_set_baudrate_prescaler(SPI1, SPI_CR1_BR_FPCLK_DIV_64);
+	spi_set_clock_polarity_0(SPI1);
+	spi_set_clock_phase_0(SPI1);
+	spi_set_full_duplex_mode(SPI1);
+	spi_set_unidirectional_mode(SPI1); /* bidirectional but in 3-wire */
+	spi_enable_software_slave_management(SPI1);
+	spi_send_msb_first(SPI1);
+	spi_set_nss_high(SPI1);
+	//spi_enable_ss_output(SPI1);
+	SPI_I2SCFGR(SPI1) &= ~SPI_I2SCFGR_I2SMOD;
+	spi_enable(SPI1);
+}
+
 
 int main(void)
 {
-	//int p1, p2, p3;
 
+	char eje_x[20];
 	uint8_t temp;
 	int16_t gyr_x;
 	clock_setup();
@@ -185,23 +180,7 @@ int main(void)
 	usart_setup();
 	spi_setup();
 
-	gpio_clear(GPIOE, GPIO3);
-	spi_send8(SPI1, GYR_CTRL_REG1);
-	spi_read8(SPI1);
-	spi_send8(SPI1, GYR_CTRL_REG1_PD | GYR_CTRL_REG1_XEN |
-			GYR_CTRL_REG1_YEN | GYR_CTRL_REG1_ZEN |
-			(3 << GYR_CTRL_REG1_BW_SHIFT));
-	spi_read8(SPI1);
-	gpio_set(GPIOE, GPIO3);
-
-	gpio_clear(GPIOE, GPIO3);
-	spi_send8(SPI1, GYR_CTRL_REG4);
-	spi_read8(SPI1);
-	spi_send8(SPI1, (1 << GYR_CTRL_REG4_FS_SHIFT));
-	spi_read8(SPI1);
-	gpio_set(GPIOE, GPIO3);
-
-	clock_setup();
+	//clock_setup();
 	console_setup(115200);
 	sdram_init();
 	lcd_spi_init();
@@ -231,72 +210,66 @@ int main(void)
 /*	(void) console_getc(1); */
 	gfx_setTextColor(LCD_YELLOW, LCD_BLACK);
 	gfx_setTextSize(3);
-	// p1 = 0;
-	// p2 = 45;
-	// p3 = 90;
+	
 	while (1) {
 		gfx_fillScreen(LCD_BLACK);
 		gfx_setCursor(15, 150);
-		gfx_puts("PLANETS!");
 
 
-		// gfx_fillCircle(120, 160, 40, LCD_YELLOW);
-		// gfx_drawCircle(120, 160, 55, LCD_GREY);
-		// gfx_drawCircle(120, 160, 75, LCD_GREY);
-		// gfx_drawCircle(120, 160, 100, LCD_GREY);
-
-		// gfx_fillCircle(120 + (sin(d2r(p1)) * 55),
-		// 	       160 + (cos(d2r(p1)) * 55), 5, LCD_RED);
-		// gfx_fillCircle(120 + (sin(d2r(p2)) * 75),
-		// 	       160 + (cos(d2r(p2)) * 75), 10, LCD_WHITE);
-		// gfx_fillCircle(120 + (sin(d2r(p3)) * 100),
-		// 	       160 + (cos(d2r(p3)) * 100), 8, LCD_BLUE);
-		// p1 = (p1 + 3) % 360;
-		// p2 = (p2 + 2) % 360;
-		// p3 = (p3 + 1) % 360;
-		lcd_show_frame();
+		// gfx_puts("PLANETS!");
+		// lcd_show_frame();
 
 		gpio_clear(GPIOE, GPIO3);
-		spi_send8(SPI1, GYR_WHO_AM_I | GYR_RNW);
-		spi_read8(SPI1);
-		spi_send8(SPI1, 0);
-		temp=spi_read8(SPI1);
+		spi_send(SPI1, GYR_WHO_AM_I | GYR_RNW);
+		spi_read(SPI1);
+		spi_send(SPI1, 0);
+		temp=spi_read(SPI1);
 		my_usart_print_int(USART2, (temp));
 		gpio_set(GPIOE, GPIO3);
 
 		gpio_clear(GPIOE, GPIO3);
-		spi_send8(SPI1, GYR_STATUS_REG | GYR_RNW);
-		spi_read8(SPI1);
-		spi_send8(SPI1, 0);
-		temp=spi_read8(SPI1);
+		spi_send(SPI1, GYR_STATUS_REG | GYR_RNW);
+		spi_read(SPI1);
+		spi_send(SPI1, 0);
+		temp=spi_read(SPI1);
 		my_usart_print_int(USART2, (temp));
 		gpio_set(GPIOE, GPIO3);
 
 		gpio_clear(GPIOE, GPIO3);
-		spi_send8(SPI1, GYR_OUT_TEMP | GYR_RNW);
-		spi_read8(SPI1);
-		spi_send8(SPI1, 0);
-		temp=spi_read8(SPI1);
+		spi_send(SPI1, GYR_OUT_TEMP | GYR_RNW);
+		spi_read(SPI1);
+		spi_send(SPI1, 0);
+		temp=spi_read(SPI1);
 		my_usart_print_int(USART2, (temp));
 		gpio_set(GPIOE, GPIO3);
 
 		gpio_clear(GPIOE, GPIO3);
-		spi_send8(SPI1, GYR_OUT_X_L | GYR_RNW);
-		spi_read8(SPI1);
-		spi_send8(SPI1, 0);
-		gyr_x=spi_read8(SPI1);
+		spi_send(SPI1, GYR_OUT_X_L | GYR_RNW);
+		spi_read(SPI1);
+		spi_send(SPI1, 0);
+		gyr_x=spi_read(SPI1);
 		gpio_set(GPIOE, GPIO3);
 
 		gpio_clear(GPIOE, GPIO3);
-		spi_send8(SPI1, GYR_OUT_X_H | GYR_RNW);
-		spi_read8(SPI1);
-		spi_send8(SPI1, 0);
-		gyr_x|=spi_read8(SPI1) << 8;
+		spi_send(SPI1, GYR_OUT_X_H | GYR_RNW);
+		spi_read(SPI1);
+		spi_send(SPI1, 0);
+		gyr_x|=spi_read(SPI1) << 8;
 		my_usart_print_int(USART2, (gyr_x));
 		gpio_set(GPIOE, GPIO3);
 
+		sprintf(eje_x, "%d", gyr_x);
+
+		gfx_puts("x: ");
+		gfx_puts(eje_x);
+		//printf(gyr_x);
+
+		lcd_show_frame();
+
+
+
 		int i;
-		for (i = 0; i < 80000; i++)    /* Wait a bit. */
+		for (i = 0; i < 8000; i++)    /* Wait a bit. */
 			__asm__("nop");
 
 
