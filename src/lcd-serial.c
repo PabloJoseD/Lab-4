@@ -132,8 +132,14 @@ static void my_usart_print_int(uint32_t usart, int32_t value)
 #define GYR_CTRL_REG4		0x23
 #define GYR_CTRL_REG4_FS_SHIFT	4
 
+
+// Registros del giroscopio, tabla 17 hoja de datos
 #define GYR_OUT_X_L		0x28
 #define GYR_OUT_X_H		0x29
+#define GYR_OUT_Y_L		0x28
+#define GYR_OUT_Y_H		0x29
+#define GYR_OUT_Z_L		0x28
+#define GYR_OUT_Z_H		0x29
 
 // Sensibilidad de la pantalla
 #define L3GD20_SENSITIVITY_250DPS  (0.00875F)     
@@ -156,7 +162,7 @@ static void spi_setup(void)
 			GPIO7 | GPIO8 | GPIO9);
 	gpio_set_af(GPIOF, GPIO_AF5, GPIO7 | GPIO8 | GPIO9);
 
-	//spi initialization;
+	// Inicializacion del SPI;
 	spi_set_master_mode(SPI5);
 	spi_set_baudrate_prescaler(SPI5, SPI_CR1_BR_FPCLK_DIV_64);
 	spi_set_clock_polarity_0(SPI5);
@@ -188,12 +194,146 @@ static void spi_setup(void)
 }
 
 
+static void coordenada_x(void){
+	char eje_x[20];
+	char eje_y[20];
+	char eje_z[20];
+
+	//uint8_t temp;
+
+	int16_t gyr_x;
+	int16_t gyr_y;
+	int16_t gyr_z;
+
+
+	gpio_clear(GPIOC, GPIO1);
+	spi_send(SPI5, GYR_WHO_AM_I | 0x80);
+	spi_read(SPI5);
+	spi_send(SPI5, 0);
+	spi_read(SPI5);
+	//temp=spi_read(SPI5);
+	//my_usart_print_int(USART2, (temp));
+	gpio_set(GPIOC, GPIO1);
+
+	gpio_clear(GPIOC, GPIO1);
+	spi_send(SPI5, GYR_STATUS_REG | GYR_RNW);
+	spi_read(SPI5);
+	spi_send(SPI5, 0);
+	spi_read(SPI5);
+	//temp=spi_read(SPI5);
+	//my_usart_print_int(USART2, (temp));
+	gpio_set(GPIOC, GPIO1);
+
+	gpio_clear(GPIOC, GPIO1);
+	spi_send(SPI5, GYR_OUT_TEMP | GYR_RNW);
+	spi_read(SPI5);
+	spi_send(SPI5, 0);
+	spi_read(SPI5);
+	//temp=spi_read(SPI5);
+	//my_usart_print_int(USART2, (temp));
+	gpio_set(GPIOC, GPIO1);
+
+
+	// EJE X
+
+	gpio_clear(GPIOC, GPIO1);
+	spi_send(SPI5, GYR_OUT_X_L | GYR_RNW);
+	spi_read(SPI5);
+	spi_send(SPI5, 0);
+	gyr_x=spi_read(SPI5);
+	gpio_set(GPIOC, GPIO1);
+
+	gpio_clear(GPIOC, GPIO1);
+	spi_send(SPI5, GYR_OUT_X_H | GYR_RNW);
+	spi_read(SPI5);
+	spi_send(SPI5, 0);
+	gyr_x|=spi_read(SPI5) << 8;
+	//my_usart_print_int(USART2, (gyr_x));
+	gpio_set(GPIOC, GPIO1);
+
+	gyr_x = gyr_x*L3GD20_SENSITIVITY_250DPS;
+	sprintf(eje_x, "%d", gyr_x);
+	gfx_setCursor(15, 100);
+	gfx_puts("x: ");
+	gfx_puts(eje_x);
+
+
+	// EJE Y
+
+	gpio_clear(GPIOC, GPIO1);
+	spi_send(SPI5, GYR_OUT_Y_L | GYR_RNW);
+	spi_read(SPI5);
+	spi_send(SPI5, 0);
+	gyr_y=spi_read(SPI5);
+	gpio_set(GPIOC, GPIO1);
+
+	gpio_clear(GPIOC, GPIO1);
+	spi_send(SPI5, GYR_OUT_Y_H | GYR_RNW);
+	spi_read(SPI5);
+	spi_send(SPI5, 0);
+	gyr_y|=spi_read(SPI5) << 8;
+	//my_usart_print_int(USART2, (gyr_x));
+	gpio_set(GPIOC, GPIO1);
+
+	gyr_y = gyr_y*L3GD20_SENSITIVITY_250DPS;
+	sprintf(eje_y, "%d", gyr_y);
+	gfx_setCursor(15, 150);
+	gfx_puts("y: ");
+	gfx_puts(eje_y);
+
+
+	// EJE Z
+
+	gpio_clear(GPIOC, GPIO1);
+	spi_send(SPI5, GYR_OUT_Z_L | GYR_RNW);
+	spi_read(SPI5);
+	spi_send(SPI5, 0);
+	gyr_z=spi_read(SPI5);
+	gpio_set(GPIOC, GPIO1);
+
+	gpio_clear(GPIOC, GPIO1);
+	spi_send(SPI5, GYR_OUT_Z_H | GYR_RNW);
+	spi_read(SPI5);
+	spi_send(SPI5, 0);
+	gyr_z|=spi_read(SPI5) << 8;
+	//my_usart_print_int(USART2, (gyr_x));
+	gpio_set(GPIOC, GPIO1);
+
+	gyr_z = gyr_z*L3GD20_SENSITIVITY_250DPS;
+	sprintf(eje_z, "%d", gyr_z);
+	gfx_setCursor(15, 200);
+	gfx_puts("z: ");
+	gfx_puts(eje_z);
+
+
+	gyr_x = gyr_x*L3GD20_SENSITIVITY_250DPS;
+	gyr_y = gyr_y*L3GD20_SENSITIVITY_250DPS;
+	gyr_z = gyr_z*L3GD20_SENSITIVITY_250DPS;
+
+	sprintf(eje_x, "%d", gyr_x);
+	sprintf(eje_y, "%d", gyr_y);
+	sprintf(eje_z, "%d", gyr_z);
+
+	gfx_setCursor(15, 100);
+	gfx_puts("x: ");
+	gfx_puts(eje_x);
+
+	gfx_setCursor(15, 150);
+	gfx_puts("y: ");
+	gfx_puts(eje_y);
+
+	gfx_setCursor(15, 200);
+	gfx_puts("z: ");
+	gfx_puts(eje_z);
+
+}
+
+
+
 int main(void)
 {
 
-	char eje_x[20];
-	uint8_t temp;
-	int16_t gyr_x;
+	
 	clock_setup();
 	gpio_setup();
 	usart_setup();
@@ -203,99 +343,20 @@ int main(void)
 	console_setup(115200);
 	sdram_init();
 	lcd_spi_init();
-	console_puts("LCD Initialized\n");
-	console_puts("Should have a checker pattern, press any key to proceed\n");
-	msleep(2000);
-/*	(void) console_getc(1); */
-	gfx_init(lcd_draw_pixel, 240, 320);
-	gfx_fillScreen(LCD_GREY);
-	gfx_fillRoundRect(10, 10, 220, 220, 5, LCD_WHITE);
-	gfx_drawRoundRect(10, 10, 220, 220, 5, LCD_RED);
-	gfx_fillCircle(20, 250, 10, LCD_RED);
-	gfx_fillCircle(120, 250, 10, LCD_GREEN);
-	gfx_fillCircle(220, 250, 10, LCD_BLUE);
-	gfx_setTextSize(2);
-	gfx_setCursor(15, 25);
-	gfx_puts("STM32F4-DISCO");
-	gfx_setTextSize(1);
-	gfx_setCursor(15, 49);
-	gfx_puts("Simple example to put some");
-	gfx_setCursor(15, 60);
-	gfx_puts("stuff on the LCD screen.");
-	lcd_show_frame();
-	console_puts("Now it has a bit of structured graphics.\n");
-	console_puts("Press a key for some simple animation.\n");
-	msleep(2000);
-/*	(void) console_getc(1); */
+ 	gfx_init(lcd_draw_pixel, 240, 320);
 	gfx_setTextColor(LCD_YELLOW, LCD_BLACK);
 	gfx_setTextSize(3);
 	
 	while (1) {
 		gfx_fillScreen(LCD_BLACK);
-		gfx_setCursor(15, 150);
 
-
-		// gfx_puts("PLANETS!");
-		// lcd_show_frame();
-
-		gpio_clear(GPIOC, GPIO1);
-		spi_send(SPI5, GYR_WHO_AM_I | 0x80);
-		spi_read(SPI5);
-		spi_send(SPI5, 0);
-		spi_read(SPI5);
-		//temp=spi_read(SPI5);
-		//my_usart_print_int(USART2, (temp));
-		gpio_set(GPIOC, GPIO1);
-
-		gpio_clear(GPIOC, GPIO1);
-		spi_send(SPI5, GYR_STATUS_REG | GYR_RNW);
-		spi_read(SPI5);
-		spi_send(SPI5, 0);
-		spi_read(SPI5);
-		//temp=spi_read(SPI5);
-		//my_usart_print_int(USART2, (temp));
-		gpio_set(GPIOC, GPIO1);
-
-		gpio_clear(GPIOC, GPIO1);
-		spi_send(SPI5, GYR_OUT_TEMP | GYR_RNW);
-		spi_read(SPI5);
-		spi_send(SPI5, 0);
-		spi_read(SPI5);
-		//temp=spi_read(SPI5);
-		//my_usart_print_int(USART2, (temp));
-		gpio_set(GPIOC, GPIO1);
-
-		gpio_clear(GPIOC, GPIO1);
-		spi_send(SPI5, GYR_OUT_X_L | GYR_RNW);
-		spi_read(SPI5);
-		spi_send(SPI5, 0);
-		gyr_x=spi_read(SPI5);
-		gpio_set(GPIOC, GPIO1);
-
-		gpio_clear(GPIOC, GPIO1);
-		spi_send(SPI5, GYR_OUT_X_H | GYR_RNW);
-		spi_read(SPI5);
-		spi_send(SPI5, 0);
-		gyr_x|=spi_read(SPI5) << 8;
-		//my_usart_print_int(USART2, (gyr_x));
-		gpio_set(GPIOC, GPIO1);
-
-		gyr_x = gyr_x*L3GD20_SENSITIVITY_250DPS;
-
-		sprintf(eje_x, "%d", gyr_x);
-
-		gfx_puts("x: ");
-		gfx_puts(eje_x);
-		
+		coordenadas();
 
 		lcd_show_frame();
 
-
-
 		int i;
-		for (i = 0; i < 1000000; i++)    /* Wait a bit. */
+		for (i = 0; i < 8000000; i++)    /* Wait a bit. */
 			__asm__("nop");
-
 
 
 	}
