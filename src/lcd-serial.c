@@ -135,37 +135,56 @@ static void my_usart_print_int(uint32_t usart, int32_t value)
 #define GYR_OUT_X_L		0x28
 #define GYR_OUT_X_H		0x29
 
+// Sensibilidad de la pantalla
+#define L3GD20_SENSITIVITY_250DPS  (0.00875F)     
+
 static void spi_setup(void)
 {
-	rcc_periph_clock_enable(RCC_SPI1);
+	rcc_periph_clock_enable(RCC_SPI5);
 	/* For spi signal pins */
-	rcc_periph_clock_enable(RCC_GPIOA);
+	rcc_periph_clock_enable(RCC_GPIOC);
 	/* For spi mode select on the l3gd20 */
-	rcc_periph_clock_enable(RCC_GPIOE);
+	rcc_periph_clock_enable(RCC_GPIOF);
 
 	/* Setup GPIOE3 pin for spi mode l3gd20 select. */
-	gpio_mode_setup(GPIOE, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO3);
+	gpio_mode_setup(GPIOC, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO1);
 	/* Start with spi communication disabled */
-	gpio_set(GPIOE, GPIO3);
+	gpio_set(GPIOC, GPIO1);
 
 	/* Setup GPIO pins for AF5 for SPI1 signals. */
-	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE,
-			GPIO5 | GPIO6 | GPIO7);
-	gpio_set_af(GPIOA, GPIO_AF5, GPIO5 | GPIO6 | GPIO7);
+	gpio_mode_setup(GPIOF, GPIO_MODE_AF, GPIO_PUPD_NONE,
+			GPIO7 | GPIO8 | GPIO9);
+	gpio_set_af(GPIOF, GPIO_AF5, GPIO7 | GPIO8 | GPIO9);
 
 	//spi initialization;
-	spi_set_master_mode(SPI1);
-	spi_set_baudrate_prescaler(SPI1, SPI_CR1_BR_FPCLK_DIV_64);
-	spi_set_clock_polarity_0(SPI1);
-	spi_set_clock_phase_0(SPI1);
-	spi_set_full_duplex_mode(SPI1);
-	spi_set_unidirectional_mode(SPI1); /* bidirectional but in 3-wire */
-	spi_enable_software_slave_management(SPI1);
-	spi_send_msb_first(SPI1);
-	spi_set_nss_high(SPI1);
-	//spi_enable_ss_output(SPI1);
-	SPI_I2SCFGR(SPI1) &= ~SPI_I2SCFGR_I2SMOD;
-	spi_enable(SPI1);
+	spi_set_master_mode(SPI5);
+	spi_set_baudrate_prescaler(SPI5, SPI_CR1_BR_FPCLK_DIV_64);
+	spi_set_clock_polarity_0(SPI5);
+	spi_set_clock_phase_0(SPI5);
+	spi_set_full_duplex_mode(SPI5);
+	spi_set_unidirectional_mode(SPI5); /* bidirectional but in 3-wire */
+	spi_enable_software_slave_management(SPI5);
+	spi_send_msb_first(SPI5);
+	spi_set_nss_high(SPI5);
+
+	SPI_I2SCFGR(SPI5) &= ~SPI_I2SCFGR_I2SMOD;
+	spi_enable(SPI5);
+	
+    gpio_clear(GPIOC, GPIO1);
+	spi_send(SPI5, GYR_CTRL_REG1); 
+	spi_read(SPI5);
+	spi_send(SPI5, GYR_CTRL_REG1_PD | GYR_CTRL_REG1_XEN |
+			GYR_CTRL_REG1_YEN | GYR_CTRL_REG1_ZEN |
+			(3 << GYR_CTRL_REG1_BW_SHIFT));
+	spi_read(SPI5);
+	gpio_set(GPIOC, GPIO1); 
+    gpio_clear(GPIOC, GPIO1);
+	spi_send(SPI5, GYR_CTRL_REG4);
+	spi_read(SPI5);
+	spi_send(SPI5, (1 << GYR_CTRL_REG4_FS_SHIFT));
+	spi_read(SPI5);
+	gpio_set(GPIOC, GPIO1);
+	
 }
 
 
@@ -219,57 +238,62 @@ int main(void)
 		// gfx_puts("PLANETS!");
 		// lcd_show_frame();
 
-		gpio_clear(GPIOE, GPIO3);
-		spi_send(SPI1, GYR_WHO_AM_I | GYR_RNW);
-		spi_read(SPI1);
-		spi_send(SPI1, 0);
-		temp=spi_read(SPI1);
-		my_usart_print_int(USART2, (temp));
-		gpio_set(GPIOE, GPIO3);
+		gpio_clear(GPIOC, GPIO1);
+		spi_send(SPI5, GYR_WHO_AM_I | 0x80);
+		spi_read(SPI5);
+		spi_send(SPI5, 0);
+		spi_read(SPI5);
+		//temp=spi_read(SPI5);
+		//my_usart_print_int(USART2, (temp));
+		gpio_set(GPIOC, GPIO1);
 
-		gpio_clear(GPIOE, GPIO3);
-		spi_send(SPI1, GYR_STATUS_REG | GYR_RNW);
-		spi_read(SPI1);
-		spi_send(SPI1, 0);
-		temp=spi_read(SPI1);
-		my_usart_print_int(USART2, (temp));
-		gpio_set(GPIOE, GPIO3);
+		gpio_clear(GPIOC, GPIO1);
+		spi_send(SPI5, GYR_STATUS_REG | GYR_RNW);
+		spi_read(SPI5);
+		spi_send(SPI5, 0);
+		spi_read(SPI5);
+		//temp=spi_read(SPI5);
+		//my_usart_print_int(USART2, (temp));
+		gpio_set(GPIOC, GPIO1);
 
-		gpio_clear(GPIOE, GPIO3);
-		spi_send(SPI1, GYR_OUT_TEMP | GYR_RNW);
-		spi_read(SPI1);
-		spi_send(SPI1, 0);
-		temp=spi_read(SPI1);
-		my_usart_print_int(USART2, (temp));
-		gpio_set(GPIOE, GPIO3);
+		gpio_clear(GPIOC, GPIO1);
+		spi_send(SPI5, GYR_OUT_TEMP | GYR_RNW);
+		spi_read(SPI5);
+		spi_send(SPI5, 0);
+		spi_read(SPI5);
+		//temp=spi_read(SPI5);
+		//my_usart_print_int(USART2, (temp));
+		gpio_set(GPIOC, GPIO1);
 
-		gpio_clear(GPIOE, GPIO3);
-		spi_send(SPI1, GYR_OUT_X_L | GYR_RNW);
-		spi_read(SPI1);
-		spi_send(SPI1, 0);
-		gyr_x=spi_read(SPI1);
-		gpio_set(GPIOE, GPIO3);
+		gpio_clear(GPIOC, GPIO1);
+		spi_send(SPI5, GYR_OUT_X_L | GYR_RNW);
+		spi_read(SPI5);
+		spi_send(SPI5, 0);
+		gyr_x=spi_read(SPI5);
+		gpio_set(GPIOC, GPIO1);
 
-		gpio_clear(GPIOE, GPIO3);
-		spi_send(SPI1, GYR_OUT_X_H | GYR_RNW);
-		spi_read(SPI1);
-		spi_send(SPI1, 0);
-		gyr_x|=spi_read(SPI1) << 8;
-		my_usart_print_int(USART2, (gyr_x));
-		gpio_set(GPIOE, GPIO3);
+		gpio_clear(GPIOC, GPIO1);
+		spi_send(SPI5, GYR_OUT_X_H | GYR_RNW);
+		spi_read(SPI5);
+		spi_send(SPI5, 0);
+		gyr_x|=spi_read(SPI5) << 8;
+		//my_usart_print_int(USART2, (gyr_x));
+		gpio_set(GPIOC, GPIO1);
+
+		gyr_x = gyr_x*L3GD20_SENSITIVITY_250DPS;
 
 		sprintf(eje_x, "%d", gyr_x);
 
 		gfx_puts("x: ");
 		gfx_puts(eje_x);
-		//printf(gyr_x);
+		
 
 		lcd_show_frame();
 
 
 
 		int i;
-		for (i = 0; i < 8000; i++)    /* Wait a bit. */
+		for (i = 0; i < 1000000; i++)    /* Wait a bit. */
 			__asm__("nop");
 
 
