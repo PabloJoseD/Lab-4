@@ -136,10 +136,10 @@ static void my_usart_print_int(uint32_t usart, int32_t value)
 // Registros del giroscopio, tabla 17 hoja de datos
 #define GYR_OUT_X_L		0x28
 #define GYR_OUT_X_H		0x29
-#define GYR_OUT_Y_L		0x28
-#define GYR_OUT_Y_H		0x29
-#define GYR_OUT_Z_L		0x28
-#define GYR_OUT_Z_H		0x29
+#define GYR_OUT_Y_L		0x2A
+#define GYR_OUT_Y_H		0x2B
+#define GYR_OUT_Z_L		0x2C
+#define GYR_OUT_Z_H		0x2D
 
 // Sensibilidad de la pantalla
 #define L3GD20_SENSITIVITY_250DPS  (0.00875F)     
@@ -194,12 +194,12 @@ static void spi_setup(void)
 }
 
 
-static void coordenada_x(void){
+static void coordenadas(void){
 	char eje_x[20];
 	char eje_y[20];
 	char eje_z[20];
 
-	//uint8_t temp;
+	uint8_t temp;
 
 	int16_t gyr_x;
 	int16_t gyr_y;
@@ -251,12 +251,6 @@ static void coordenada_x(void){
 	//my_usart_print_int(USART2, (gyr_x));
 	gpio_set(GPIOC, GPIO1);
 
-	gyr_x = gyr_x*L3GD20_SENSITIVITY_250DPS;
-	sprintf(eje_x, "%d", gyr_x);
-	gfx_setCursor(15, 100);
-	gfx_puts("x: ");
-	gfx_puts(eje_x);
-
 
 	// EJE Y
 
@@ -274,12 +268,6 @@ static void coordenada_x(void){
 	gyr_y|=spi_read(SPI5) << 8;
 	//my_usart_print_int(USART2, (gyr_x));
 	gpio_set(GPIOC, GPIO1);
-
-	gyr_y = gyr_y*L3GD20_SENSITIVITY_250DPS;
-	sprintf(eje_y, "%d", gyr_y);
-	gfx_setCursor(15, 150);
-	gfx_puts("y: ");
-	gfx_puts(eje_y);
 
 
 	// EJE Z
@@ -299,12 +287,6 @@ static void coordenada_x(void){
 	//my_usart_print_int(USART2, (gyr_x));
 	gpio_set(GPIOC, GPIO1);
 
-	gyr_z = gyr_z*L3GD20_SENSITIVITY_250DPS;
-	sprintf(eje_z, "%d", gyr_z);
-	gfx_setCursor(15, 200);
-	gfx_puts("z: ");
-	gfx_puts(eje_z);
-
 
 	gyr_x = gyr_x*L3GD20_SENSITIVITY_250DPS;
 	gyr_y = gyr_y*L3GD20_SENSITIVITY_250DPS;
@@ -314,15 +296,15 @@ static void coordenada_x(void){
 	sprintf(eje_y, "%d", gyr_y);
 	sprintf(eje_z, "%d", gyr_z);
 
-	gfx_setCursor(15, 100);
+	gfx_setCursor(15, 90);
 	gfx_puts("x: ");
 	gfx_puts(eje_x);
 
-	gfx_setCursor(15, 150);
+	gfx_setCursor(15, 135);
 	gfx_puts("y: ");
 	gfx_puts(eje_y);
 
-	gfx_setCursor(15, 200);
+	gfx_setCursor(15, 185);
 	gfx_puts("z: ");
 	gfx_puts(eje_z);
 
@@ -332,7 +314,6 @@ static void coordenada_x(void){
 
 int main(void)
 {
-
 	
 	clock_setup();
 	gpio_setup();
@@ -344,18 +325,21 @@ int main(void)
 	sdram_init();
 	lcd_spi_init();
  	gfx_init(lcd_draw_pixel, 240, 320);
-	gfx_setTextColor(LCD_YELLOW, LCD_BLACK);
-	gfx_setTextSize(3);
+	gfx_setTextColor(LCD_BLACK, LCD_WHITE);
+	gfx_setTextSize(2);
 	
 	while (1) {
-		gfx_fillScreen(LCD_BLACK);
+		gfx_fillScreen(LCD_WHITE);
+
+		gfx_setCursor(30, 40);
+		gfx_puts("Sismografo");
 
 		coordenadas();
 
 		lcd_show_frame();
 
 		int i;
-		for (i = 0; i < 8000000; i++)    /* Wait a bit. */
+		for (i = 0; i < 80000; i++)    /* Wait a bit. */
 			__asm__("nop");
 
 
