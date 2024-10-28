@@ -27,10 +27,10 @@
 #include "gfx.h"
 
  
-#include </home/pablo/git/libopencm3-examples/libopencm3/include/libopencm3/stm32/rcc.h>
-#include </home/pablo/git/libopencm3-examples/libopencm3/include/libopencm3/stm32/usart.h>
-#include </home/pablo/git/libopencm3-examples/libopencm3/include/libopencm3/stm32/spi.h>
-#include </home/pablo/git/libopencm3-examples/libopencm3/include/libopencm3/stm32/gpio.h>
+#include <libopencm3/stm32/rcc.h>
+#include <libopencm3/stm32/usart.h>
+#include <libopencm3/stm32/spi.h>
+#include <libopencm3/stm32/gpio.h>
 
 #define LBLUE GPIOE, GPIO8
 #define LRED GPIOE, GPIO9
@@ -50,14 +50,34 @@
 #define LD8 GPIOE, GPIO14
 #define LD6 GPIOE, GPIO15 
 
-/* Convert degrees to radians */
-#define d2r(d) ((d) * 6.2831853 / 360.0)
+#define GYR_RNW			(1 << 7) /* Write when zero */
+#define GYR_MNS			(1 << 6) /* Multiple reads when 1 */
+#define GYR_WHO_AM_I		0x0F
+#define GYR_OUT_TEMP		0x26
+#define GYR_STATUS_REG		0x27
+#define GYR_CTRL_REG1		0x20
+#define GYR_CTRL_REG1_PD	(1 << 3)
+#define GYR_CTRL_REG1_XEN	(1 << 1)
+#define GYR_CTRL_REG1_YEN	(1 << 0)
+#define GYR_CTRL_REG1_ZEN	(1 << 2)
+#define GYR_CTRL_REG1_BW_SHIFT	4
+#define GYR_CTRL_REG4		0x23
+#define GYR_CTRL_REG4_FS_SHIFT	4
 
-/*
- * This is our example, the heavy lifing is actually in lcd-spi.c but
- * this drives that code.
- */
- 
+
+// Registros del giroscopio, tabla 17 hoja de datos
+#define GYR_OUT_X_L		0x28
+#define GYR_OUT_X_H		0x29
+#define GYR_OUT_Y_L		0x2A
+#define GYR_OUT_Y_H		0x2B
+#define GYR_OUT_Z_L		0x2C
+#define GYR_OUT_Z_H		0x2D
+
+
+// Sensibilidad de la pantalla
+#define L3GD20_SENSITIVITY_250DPS  (0.00875F)     
+
+
 
 static void usart_setup(void)
 {
@@ -83,10 +103,23 @@ static void usart_setup(void)
 
 static void gpio_setup(void)
 {
-	rcc_periph_clock_enable(RCC_GPIOE);
+	rcc_periph_clock_enable(RCC_GPIOE | RCC_GPIOG);
+	// GPIO pantalla
 	gpio_mode_setup(GPIOE, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE,
 		GPIO8 | GPIO9 | GPIO10 | GPIO11 | GPIO12 | GPIO13 |
 		GPIO14 | GPIO15);
+	// GPIO botones
+	gpio_mode_setup(GPIOG, GPIO_MODE_OUTPUT,
+			GPIO_PUPD_NONE, GPIO13 | GPIO14);
+}
+
+static void button_setup(void)
+{
+	/* Enable GPIOA clock. */
+	rcc_periph_clock_enable(RCC_GPIOA);
+
+	/* Set GPIO0 (in GPIO port A) to 'input open-drain'. */
+	gpio_mode_setup(GPIOA, GPIO_MODE_INPUT, GPIO_PUPD_NONE, GPIO0);
 }
 
 static void my_usart_print_int(uint32_t usart, int32_t value)
@@ -117,32 +150,6 @@ static void my_usart_print_int(uint32_t usart, int32_t value)
 	usart_send_blocking(usart, '\n');
 }
 
-
-#define GYR_RNW			(1 << 7) /* Write when zero */
-#define GYR_MNS			(1 << 6) /* Multiple reads when 1 */
-#define GYR_WHO_AM_I		0x0F
-#define GYR_OUT_TEMP		0x26
-#define GYR_STATUS_REG		0x27
-#define GYR_CTRL_REG1		0x20
-#define GYR_CTRL_REG1_PD	(1 << 3)
-#define GYR_CTRL_REG1_XEN	(1 << 1)
-#define GYR_CTRL_REG1_YEN	(1 << 0)
-#define GYR_CTRL_REG1_ZEN	(1 << 2)
-#define GYR_CTRL_REG1_BW_SHIFT	4
-#define GYR_CTRL_REG4		0x23
-#define GYR_CTRL_REG4_FS_SHIFT	4
-
-
-// Registros del giroscopio, tabla 17 hoja de datos
-#define GYR_OUT_X_L		0x28
-#define GYR_OUT_X_H		0x29
-#define GYR_OUT_Y_L		0x2A
-#define GYR_OUT_Y_H		0x2B
-#define GYR_OUT_Z_L		0x2C
-#define GYR_OUT_Z_H		0x2D
-
-// Sensibilidad de la pantalla
-#define L3GD20_SENSITIVITY_250DPS  (0.00875F)     
 
 static void spi_setup(void)
 {
@@ -314,32 +321,50 @@ static void coordenadas(void){
 
 int main(void)
 {
-	
+
 	clock_setup();
+	button_setup();
 	gpio_setup();
 	usart_setup();
 	spi_setup();
-
-	//clock_setup();
 	console_setup(115200);
 	sdram_init();
 	lcd_spi_init();
  	gfx_init(lcd_draw_pixel, 240, 320);
 	gfx_setTextColor(LCD_BLACK, LCD_WHITE);
 	gfx_setTextSize(2);
+
+	int estado_led = 0;
+	int estado_ultimo_boton = 0;
 	
 	while (1) {
-		gfx_fillScreen(LCD_WHITE);
 
+		int estado_boton = gpio_get(GPIOA, GPIO0);
+		int i;
+		gfx_fillScreen(LCD_WHITE);
 		gfx_setCursor(30, 40);
 		gfx_puts("Sismografo");
-
 		coordenadas();
 
+		//Detectar flanco de subida con antirrebote
+        if (estado_boton && !estado_ultimo_boton) {
+			if (gpio_get(GPIOA, GPIO0)) {  // Verificar nuevamente el estado del botón
+			estado_led = !estado_led;  // Cambiar el estado del LED
+
+				if (estado_led) {
+					gpio_set(GPIOG, GPIO13 | GPIO14);
+				} 
+				else {
+					gpio_clear(GPIOG, GPIO13 | GPIO14);
+				} 
+		    }
+		}
+		
+		estado_ultimo_boton = estado_boton;  // Actualizar el último estado del botón
 		lcd_show_frame();
 
-		int i;
-		for (i = 0; i < 80000; i++)    /* Wait a bit. */
+		
+		for (i = 0; i < 800000; i++)    /* Wait a bit. */
 			__asm__("nop");
 
 
