@@ -13,13 +13,18 @@ lcd-serial.o: lcd-serial.c /usr/include/newlib/stdio.h \
  /usr/include/newlib/sys/_pthreadtypes.h \
  /usr/include/newlib/machine/types.h /usr/include/newlib/sys/stdio.h \
  /usr/lib/gcc/arm-none-eabi/12.2.1/include/stdint.h \
- /usr/include/newlib/math.h clock.h console.h sdram.h lcd-spi.h gfx.h \
- ../../../../../libopencm3//include/libopencm3/stm32/rcc.h \
+ /usr/include/newlib/math.h sdram.h lcd-spi.h gfx.h \
+ ../../../../../libopencm3//include/libopencm3/stm32/gpio.h \
  ../../../../../libopencm3//include/libopencm3/cm3/common.h \
  /usr/lib/gcc/arm-none-eabi/12.2.1/include/stdbool.h \
  ../../../../../libopencm3//include/libopencm3/stm32/memorymap.h \
  ../../../../../libopencm3//include/libopencm3/stm32/f4/memorymap.h \
  ../../../../../libopencm3//include/libopencm3/cm3/memorymap.h \
+ ../../../../../libopencm3//include/libopencm3/stm32/f4/gpio.h \
+ ../../../../../libopencm3//include/libopencm3/stm32/common/gpio_common_f24.h \
+ ../../../../../libopencm3//include/libopencm3/stm32/common/gpio_common_f234.h \
+ ../../../../../libopencm3//include/libopencm3/stm32/common/gpio_common_all.h \
+ ../../../../../libopencm3//include/libopencm3/stm32/rcc.h \
  ../../../../../libopencm3//include/libopencm3/stm32/f4/rcc.h \
  ../../../../../libopencm3//include/libopencm3/stm32/pwr.h \
  ../../../../../libopencm3//include/libopencm3/stm32/f4/pwr.h \
@@ -35,8 +40,4 @@ lcd-serial.o: lcd-serial.c /usr/include/newlib/stdio.h \
  ../../../../../libopencm3//include/libopencm3/stm32/common/spi_common_v1_frf.h \
  ../../../../../libopencm3//include/libopencm3/stm32/common/spi_common_v1.h \
  ../../../../../libopencm3//include/libopencm3/stm32/common/spi_common_all.h \
- ../../../../../libopencm3//include/libopencm3/stm32/gpio.h \
- ../../../../../libopencm3//include/libopencm3/stm32/f4/gpio.h \
- ../../../../../libopencm3//include/libopencm3/stm32/common/gpio_common_f24.h \
- ../../../../../libopencm3//include/libopencm3/stm32/common/gpio_common_f234.h \
- ../../../../../libopencm3//include/libopencm3/stm32/common/gpio_common_all.h
+ clock.h /usr/include/newlib/string.h /usr/include/newlib/sys/string.h

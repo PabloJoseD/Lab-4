@@ -20,17 +20,18 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <math.h>
-#include "clock.h"
-#include "console.h"
+
+//#include "console.h"
 #include "sdram.h"
 #include "lcd-spi.h"
 #include "gfx.h"
 
- 
+#include <libopencm3/stm32/gpio.h> 
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/usart.h>
 #include <libopencm3/stm32/spi.h>
-#include <libopencm3/stm32/gpio.h>
+#include "clock.h"
+#include <string.h>
 
 #define LBLUE GPIOE, GPIO8
 #define LRED GPIOE, GPIO9
@@ -78,27 +79,75 @@
 #define L3GD20_SENSITIVITY_250DPS  (0.00875F)     
 
 
+#define CONSOLE_UART	USART1
+
+
+typedef struct{
+	char coordenada_X[20];
+	char coordenada_Y[20];
+	char coordenada_Z[20];
+} Giroscopio;
+
+
+void console_putc1(char c);
+void console_puts2(char *s);
+
+
+/*
+ * console_putc(char c)
+ *
+ * Send the character 'c' to the USART, wait for the USART
+ * transmit buffer to be empty first.
+ */
+void console_putc1(char c)
+{
+	uint32_t	reg;
+	do {
+		reg = USART_SR(CONSOLE_UART);
+	} while ((reg & USART_SR_TXE) == 0);
+	USART_DR(CONSOLE_UART) = (uint16_t) c & 0xff;
+}
+
+
+
+/*
+ * void console_puts(char *s)
+ *
+ * Send a string to the console, one character at a time, return
+ * after the last character, as indicated by a NUL character, is
+ * reached.
+ */
+void console_puts2(char *s)
+{
+	while (*s != '\000') {
+		console_putc1(*s);
+		/* Add in a carraige return, after sending line feed */
+		if (*s == '\n') {
+			console_putc1('\r');
+		}
+		s++;
+	}
+}
+
 
 static void usart_setup(void)
 {
 	/* Enable clocks for GPIO port A (for GPIO_USART2_TX) and USART2. */
-	rcc_periph_clock_enable(RCC_USART2);
+	rcc_periph_clock_enable(RCC_USART1);
 	rcc_periph_clock_enable(RCC_GPIOA);
 
 	/* Setup GPIO pin GPIO_USART2_TX/GPIO9 on GPIO port A for transmit. */
-	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO2 | GPIO3);
-	gpio_set_af(GPIOA, GPIO_AF7, GPIO2| GPIO3);
+	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO2 | GPIO3 | GPIO9 | GPIO10);
+	gpio_set_af(GPIOA, GPIO_AF7, GPIO2| GPIO3 | GPIO9 | GPIO10);
 
-	/* Setup UART parameters. */
-	usart_set_baudrate(USART2, 115200);
-	usart_set_databits(USART2, 8);
-	usart_set_stopbits(USART2, USART_STOPBITS_1);
-	usart_set_mode(USART2, USART_MODE_TX_RX);
-	usart_set_parity(USART2, USART_PARITY_NONE);
-	usart_set_flow_control(USART2, USART_FLOWCONTROL_NONE);
-
-	/* Finally enable the USART. */
-	usart_enable(USART2);
+	/* Set up USART/UART parameters using the libopencm3 helper functions */
+	usart_set_baudrate(CONSOLE_UART, 115200);
+	usart_set_databits(CONSOLE_UART, 8);
+	usart_set_stopbits(CONSOLE_UART, USART_STOPBITS_1);
+	usart_set_mode(CONSOLE_UART, USART_MODE_TX_RX);
+	usart_set_parity(CONSOLE_UART, USART_PARITY_NONE);
+	usart_set_flow_control(CONSOLE_UART, USART_FLOWCONTROL_NONE);
+	usart_enable(CONSOLE_UART);
 }
 
 static void gpio_setup(void)
@@ -122,33 +171,6 @@ static void button_setup(void)
 	gpio_mode_setup(GPIOA, GPIO_MODE_INPUT, GPIO_PUPD_NONE, GPIO0);
 }
 
-static void my_usart_print_int(uint32_t usart, int32_t value)
-{
-	int8_t i;
-	int8_t nr_digits = 0;
-	char buffer[25];
-
-	if (value < 0) {
-		usart_send_blocking(usart, '-');
-		value = value * -1;
-	}
-
-	if (value == 0) {
-		usart_send_blocking(usart, '0');
-	}
-
-	while (value > 0) {
-		buffer[nr_digits++] = "0123456789"[value % 10];
-		value /= 10;
-	}
-
-	for (i = nr_digits-1; i >= 0; i--) {
-		usart_send_blocking(usart, buffer[i]);
-	}
-
-	usart_send_blocking(usart, '\r');
-	usart_send_blocking(usart, '\n');
-}
 
 
 static void spi_setup(void)
@@ -201,25 +223,22 @@ static void spi_setup(void)
 }
 
 
-static void coordenadas(void){
+static Giroscopio coordenadas(void){
 	char eje_x[20];
 	char eje_y[20];
 	char eje_z[20];
-
-	uint8_t temp;
 
 	int16_t gyr_x;
 	int16_t gyr_y;
 	int16_t gyr_z;
 
+	Giroscopio Giros;
 
 	gpio_clear(GPIOC, GPIO1);
 	spi_send(SPI5, GYR_WHO_AM_I | 0x80);
 	spi_read(SPI5);
 	spi_send(SPI5, 0);
 	spi_read(SPI5);
-	//temp=spi_read(SPI5);
-	//my_usart_print_int(USART2, (temp));
 	gpio_set(GPIOC, GPIO1);
 
 	gpio_clear(GPIOC, GPIO1);
@@ -227,8 +246,6 @@ static void coordenadas(void){
 	spi_read(SPI5);
 	spi_send(SPI5, 0);
 	spi_read(SPI5);
-	//temp=spi_read(SPI5);
-	//my_usart_print_int(USART2, (temp));
 	gpio_set(GPIOC, GPIO1);
 
 	gpio_clear(GPIOC, GPIO1);
@@ -236,8 +253,6 @@ static void coordenadas(void){
 	spi_read(SPI5);
 	spi_send(SPI5, 0);
 	spi_read(SPI5);
-	//temp=spi_read(SPI5);
-	//my_usart_print_int(USART2, (temp));
 	gpio_set(GPIOC, GPIO1);
 
 
@@ -255,7 +270,6 @@ static void coordenadas(void){
 	spi_read(SPI5);
 	spi_send(SPI5, 0);
 	gyr_x|=spi_read(SPI5) << 8;
-	//my_usart_print_int(USART2, (gyr_x));
 	gpio_set(GPIOC, GPIO1);
 
 
@@ -273,7 +287,6 @@ static void coordenadas(void){
 	spi_read(SPI5);
 	spi_send(SPI5, 0);
 	gyr_y|=spi_read(SPI5) << 8;
-	//my_usart_print_int(USART2, (gyr_x));
 	gpio_set(GPIOC, GPIO1);
 
 
@@ -291,7 +304,6 @@ static void coordenadas(void){
 	spi_read(SPI5);
 	spi_send(SPI5, 0);
 	gyr_z|=spi_read(SPI5) << 8;
-	//my_usart_print_int(USART2, (gyr_x));
 	gpio_set(GPIOC, GPIO1);
 
 
@@ -303,17 +315,12 @@ static void coordenadas(void){
 	sprintf(eje_y, "%d", gyr_y);
 	sprintf(eje_z, "%d", gyr_z);
 
-	gfx_setCursor(15, 90);
-	gfx_puts("x: ");
-	gfx_puts(eje_x);
+	strcpy(Giros.coordenada_X, eje_x);
+	strcpy(Giros.coordenada_Y, eje_y);
+	strcpy(Giros.coordenada_Z, eje_z);
 
-	gfx_setCursor(15, 135);
-	gfx_puts("y: ");
-	gfx_puts(eje_y);
+	return Giros;
 
-	gfx_setCursor(15, 185);
-	gfx_puts("z: ");
-	gfx_puts(eje_z);
 
 }
 
@@ -327,7 +334,6 @@ int main(void)
 	gpio_setup();
 	usart_setup();
 	spi_setup();
-	console_setup(115200);
 	sdram_init();
 	lcd_spi_init();
  	gfx_init(lcd_draw_pixel, 240, 320);
@@ -336,6 +342,7 @@ int main(void)
 
 	int estado_led = 0;
 	int estado_ultimo_boton = 0;
+	console_puts2("\nUART Demonstration Application\n");
 	
 	while (1) {
 
@@ -344,20 +351,50 @@ int main(void)
 		gfx_fillScreen(LCD_WHITE);
 		gfx_setCursor(30, 40);
 		gfx_puts("Sismografo");
-		coordenadas();
+
+		Giroscopio girosDatos = coordenadas();
+
+		// Se imprime X en la pantalla
+		gfx_setCursor(15, 90);
+		gfx_puts("x: ");
+		gfx_puts(girosDatos.coordenada_X);
+
+		// Se imprime Y en la pantalla
+		gfx_setCursor(15, 135);
+		gfx_puts("y: ");
+		gfx_puts(girosDatos.coordenada_Y);
+
+		// Se imprime Z en la pantalla
+		gfx_setCursor(15, 185);
+		gfx_puts("z: ");
+		gfx_puts(girosDatos.coordenada_Z);
+
+		// Se envia la coordenada X por el puerto usart
+		console_puts2("x: ");
+		console_puts2(girosDatos.coordenada_X);
+		console_puts2("\n");
+
+		console_puts2("y: ");
+		console_puts2(girosDatos.coordenada_Y);
+		console_puts2("\n");
+
+		console_puts2("z: ");
+		console_puts2(girosDatos.coordenada_Z);
+		console_puts2("\n");
 
 		//Detectar flanco de subida con antirrebote
-        if (estado_boton && !estado_ultimo_boton) {
+		if (estado_boton && !estado_ultimo_boton) {
 			if (gpio_get(GPIOA, GPIO0)) {  // Verificar nuevamente el estado del botón
-			estado_led = !estado_led;  // Cambiar el estado del LED
+				estado_led = !estado_led;  // Cambiar el estado del LED
 
 				if (estado_led) {
 					gpio_set(GPIOG, GPIO13 | GPIO14);
+			
 				} 
 				else {
 					gpio_clear(GPIOG, GPIO13 | GPIO14);
 				} 
-		    }
+			}
 		}
 		
 		estado_ultimo_boton = estado_boton;  // Actualizar el último estado del botón
