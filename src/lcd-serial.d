@@ -14,12 +14,16 @@ lcd-serial.o: lcd-serial.c /usr/include/newlib/stdio.h \
  /usr/include/newlib/machine/types.h /usr/include/newlib/sys/stdio.h \
  /usr/lib/gcc/arm-none-eabi/12.2.1/include/stdint.h \
  /usr/include/newlib/math.h sdram.h lcd-spi.h gfx.h \
- ../../../../../libopencm3//include/libopencm3/stm32/gpio.h \
+ ../../../../../libopencm3//include/libopencm3/stm32/adc.h \
  ../../../../../libopencm3//include/libopencm3/cm3/common.h \
  /usr/lib/gcc/arm-none-eabi/12.2.1/include/stdbool.h \
  ../../../../../libopencm3//include/libopencm3/stm32/memorymap.h \
  ../../../../../libopencm3//include/libopencm3/stm32/f4/memorymap.h \
  ../../../../../libopencm3//include/libopencm3/cm3/memorymap.h \
+ ../../../../../libopencm3//include/libopencm3/stm32/f4/adc.h \
+ ../../../../../libopencm3//include/libopencm3/stm32/common/adc_common_v1_multi.h \
+ ../../../../../libopencm3//include/libopencm3/stm32/common/adc_common_v1.h \
+ ../../../../../libopencm3//include/libopencm3/stm32/gpio.h \
  ../../../../../libopencm3//include/libopencm3/stm32/f4/gpio.h \
  ../../../../../libopencm3//include/libopencm3/stm32/common/gpio_common_f24.h \
  ../../../../../libopencm3//include/libopencm3/stm32/common/gpio_common_f234.h \

@@ -21,11 +21,10 @@
 #include <stdint.h>
 #include <math.h>
 
-//#include "console.h"
 #include "sdram.h"
 #include "lcd-spi.h"
 #include "gfx.h"
-
+#include <libopencm3/stm32/adc.h>
 #include <libopencm3/stm32/gpio.h> 
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/usart.h>
@@ -150,6 +149,7 @@ static void usart_setup(void)
 	usart_enable(CONSOLE_UART);
 }
 
+
 static void gpio_setup(void)
 {
 	rcc_periph_clock_enable(RCC_GPIOE | RCC_GPIOG);
@@ -160,6 +160,27 @@ static void gpio_setup(void)
 	// GPIO botones
 	gpio_mode_setup(GPIOG, GPIO_MODE_OUTPUT,
 			GPIO_PUPD_NONE, GPIO13 | GPIO14);
+
+
+	gpio_mode_setup(GPIOA, GPIO_MODE_ANALOG, GPIO_PUPD_NONE, GPIO1);
+
+	adc_power_off(ADC1);
+	adc_disable_scan_mode(ADC1);
+	adc_set_sample_time_on_all_channels(ADC1, ADC_SMPR_SMP_3CYC);
+
+	adc_power_on(ADC1);
+}
+
+
+static uint16_t read_adc_naiive(uint8_t channel)
+{
+	uint8_t channel_array[16];
+	channel_array[0] = channel;
+	adc_set_regular_sequence(ADC1, 1, channel_array);
+	adc_start_conversion_regular(ADC1);
+	while (!adc_eoc(ADC1));
+	uint16_t reg16 = adc_read_regular(ADC1);
+	return reg16;
 }
 
 static void button_setup(void)
@@ -325,10 +346,8 @@ static Giroscopio coordenadas(void){
 }
 
 
-
 int main(void)
 {
-
 	clock_setup();
 	button_setup();
 	gpio_setup();
@@ -336,74 +355,77 @@ int main(void)
 	spi_setup();
 	sdram_init();
 	lcd_spi_init();
- 	gfx_init(lcd_draw_pixel, 240, 320);
+	gfx_init(lcd_draw_pixel, 240, 320);
 	gfx_setTextColor(LCD_BLACK, LCD_WHITE);
 	gfx_setTextSize(2);
 
 	int estado_led = 0;
 	int estado_ultimo_boton = 0;
-	console_puts2("\nUART Demonstration Application\n");
-	
-	while (1) {
+	uint16_t bateria;
+	char nivel[20];
 
+	while (1) {
 		int estado_boton = gpio_get(GPIOA, GPIO0);
 		int i;
+		
+		//bateria = read_adc_naiive(1);
+
+		// Detectar flanco de subida con antirrebote
+		if (estado_boton && !estado_ultimo_boton) {
+			estado_led = !estado_led;  // Cambiar el estado del LED y la transmisión
+		}
+
+		if (estado_led) {
+			gpio_toggle(GPIOG, GPIO13);
+			
+			Giroscopio girosDatos = coordenadas();  // Obtener datos del giroscopio
+
+			// Enviar las coordenadas por el puerto USART
+			console_puts2("x: ");
+			console_puts2(girosDatos.coordenada_X);
+			console_puts2("\n");
+
+			console_puts2("y: ");
+			console_puts2(girosDatos.coordenada_Y);
+			console_puts2("\n");
+
+			console_puts2("z: ");
+			console_puts2(girosDatos.coordenada_Z);
+			console_puts2("\n");
+		} else {
+			gpio_clear(GPIOG, GPIO13); // Apagar LEDs si no se transmite
+		}
+
+		Giroscopio girosDatos = coordenadas();  // Obtener datos del giroscopio
+
+		// Mostrar datos en la pantalla
 		gfx_fillScreen(LCD_WHITE);
 		gfx_setCursor(30, 40);
 		gfx_puts("Sismografo");
 
-		Giroscopio girosDatos = coordenadas();
-
-		// Se imprime X en la pantalla
 		gfx_setCursor(15, 90);
 		gfx_puts("x: ");
 		gfx_puts(girosDatos.coordenada_X);
 
-		// Se imprime Y en la pantalla
 		gfx_setCursor(15, 135);
 		gfx_puts("y: ");
 		gfx_puts(girosDatos.coordenada_Y);
 
-		// Se imprime Z en la pantalla
 		gfx_setCursor(15, 185);
 		gfx_puts("z: ");
 		gfx_puts(girosDatos.coordenada_Z);
 
-		// Se envia la coordenada X por el puerto usart
-		console_puts2("x: ");
-		console_puts2(girosDatos.coordenada_X);
-		console_puts2("\n");
+		// gfx_setCursor(15, 200);
+		// gfx_puts("Tension bateria: ");
+		// gfx_puts(bateria);
 
-		console_puts2("y: ");
-		console_puts2(girosDatos.coordenada_Y);
-		console_puts2("\n");
 
-		console_puts2("z: ");
-		console_puts2(girosDatos.coordenada_Z);
-		console_puts2("\n");
-
-		//Detectar flanco de subida con antirrebote
-		if (estado_boton && !estado_ultimo_boton) {
-			if (gpio_get(GPIOA, GPIO0)) {  // Verificar nuevamente el estado del botón
-				estado_led = !estado_led;  // Cambiar el estado del LED
-
-				if (estado_led) {
-					gpio_set(GPIOG, GPIO13 | GPIO14);
-			
-				} 
-				else {
-					gpio_clear(GPIOG, GPIO13 | GPIO14);
-				} 
-			}
-		}
-		
 		estado_ultimo_boton = estado_boton;  // Actualizar el último estado del botón
+
+		
 		lcd_show_frame();
 
-		
-		for (i = 0; i < 800000; i++)    /* Wait a bit. */
+		for (i = 0; i < 800000; i++) /* Wait a bit */
 			__asm__("nop");
-
-
 	}
 }
