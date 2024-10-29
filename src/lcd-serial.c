@@ -17,13 +17,17 @@
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+#include <errno.h>
 #include <stdio.h>
+#include <unistd.h>
 #include <stdint.h>
 #include <math.h>
 
 #include "sdram.h"
 #include "lcd-spi.h"
 #include "gfx.h"
+#include <libopencm3/cm3/nvic.h>
 #include <libopencm3/stm32/adc.h>
 #include <libopencm3/stm32/gpio.h> 
 #include <libopencm3/stm32/rcc.h>
@@ -152,7 +156,8 @@ static void usart_setup(void)
 
 static void gpio_setup(void)
 {
-	rcc_periph_clock_enable(RCC_GPIOE | RCC_GPIOG);
+	rcc_periph_clock_enable(RCC_GPIOE);
+	rcc_periph_clock_enable(RCC_GPIOG);
 	// GPIO pantalla
 	gpio_mode_setup(GPIOE, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE,
 		GPIO8 | GPIO9 | GPIO10 | GPIO11 | GPIO12 | GPIO13 |
@@ -161,7 +166,11 @@ static void gpio_setup(void)
 	gpio_mode_setup(GPIOG, GPIO_MODE_OUTPUT,
 			GPIO_PUPD_NONE, GPIO13 | GPIO14);
 
+}
 
+static void adc_setup(void)
+{
+	//gpio_mode_setup(GPIOA, GPIO_MODE_ANALOG, GPIO_PUPD_NONE, GPIO0);
 	gpio_mode_setup(GPIOA, GPIO_MODE_ANALOG, GPIO_PUPD_NONE, GPIO1);
 
 	adc_power_off(ADC1);
@@ -169,6 +178,7 @@ static void gpio_setup(void)
 	adc_set_sample_time_on_all_channels(ADC1, ADC_SMPR_SMP_3CYC);
 
 	adc_power_on(ADC1);
+
 }
 
 
@@ -349,9 +359,11 @@ static Giroscopio coordenadas(void){
 int main(void)
 {
 	clock_setup();
+	rcc_periph_clock_enable(RCC_ADC1);
 	button_setup();
 	gpio_setup();
 	usart_setup();
+	adc_setup();
 	spi_setup();
 	sdram_init();
 	lcd_spi_init();
@@ -361,14 +373,16 @@ int main(void)
 
 	int estado_led = 0;
 	int estado_ultimo_boton = 0;
-	uint16_t bateria;
 	char nivel[20];
 
 	while (1) {
 		int estado_boton = gpio_get(GPIOA, GPIO0);
 		int i;
 		
-		//bateria = read_adc_naiive(1);
+		uint16_t lectura_adc = read_adc_naiive(1);   // Lee el valor del ADC
+		float voltaje_bateria = lectura_adc * (9.0 / 195.0); 
+		sprintf(nivel, "%.2f", voltaje_bateria);
+		
 
 		// Detectar flanco de subida con antirrebote
 		if (estado_boton && !estado_ultimo_boton) {
@@ -391,6 +405,10 @@ int main(void)
 
 			console_puts2("z: ");
 			console_puts2(girosDatos.coordenada_Z);
+			console_puts2("\n");
+
+			console_puts2("Tension: ");
+			console_puts2(nivel);
 			console_puts2("\n");
 		} else {
 			gpio_clear(GPIOG, GPIO13); // Apagar LEDs si no se transmite
@@ -415,9 +433,9 @@ int main(void)
 		gfx_puts("z: ");
 		gfx_puts(girosDatos.coordenada_Z);
 
-		// gfx_setCursor(15, 200);
-		// gfx_puts("Tension bateria: ");
-		// gfx_puts(bateria);
+		gfx_setCursor(15, 230);
+		gfx_puts("Bateria: ");
+		gfx_puts(nivel);
 
 
 		estado_ultimo_boton = estado_boton;  // Actualizar el último estado del botón
