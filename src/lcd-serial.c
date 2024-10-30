@@ -369,20 +369,25 @@ int main(void)
 	lcd_spi_init();
 	gfx_init(lcd_draw_pixel, 240, 320);
 	gfx_setTextColor(LCD_BLACK, LCD_WHITE);
-	gfx_setTextSize(2);
+	gfx_setTextSize(1);
 
 	int estado_led = 0;
 	int estado_ultimo_boton = 0;
 	char nivel[20];
+	float lectura_adc;
 
 	while (1) {
 		int estado_boton = gpio_get(GPIOA, GPIO0);
 		int i;
 		
-		uint16_t lectura_adc = read_adc_naiive(1);   // Lee el valor del ADC
-		float voltaje_bateria = lectura_adc * (9.0 / 195.0); 
-		sprintf(nivel, "%.2f", voltaje_bateria);
+		lectura_adc = (float)(read_adc_naiive(1)*(8.90/117));   // Lee el valor del ADC
+		sprintf(nivel, "%.2f", lectura_adc);
 		
+		if (lectura_adc <= 7)
+			gpio_set(GPIOG, GPIO14);
+		else
+			gpio_clear(GPIOG, GPIO14);
+
 
 		// Detectar flanco de subida con antirrebote
 		if (estado_boton && !estado_ultimo_boton) {
@@ -407,7 +412,7 @@ int main(void)
 			console_puts2(girosDatos.coordenada_Z);
 			console_puts2("\n");
 
-			console_puts2("Tension: ");
+			console_puts2("Voltaje: ");
 			console_puts2(nivel);
 			console_puts2("\n");
 		} else {
@@ -434,7 +439,7 @@ int main(void)
 		gfx_puts(girosDatos.coordenada_Z);
 
 		gfx_setCursor(15, 230);
-		gfx_puts("Bateria: ");
+		gfx_puts("Voltaje: ");
 		gfx_puts(nivel);
 
 
