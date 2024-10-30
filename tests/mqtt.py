@@ -2,6 +2,7 @@ from json import dumps
 from random import randint
 from time import sleep
 import paho.mqtt.client as mqtt
+from serial import Serial
 
 # MQTT broker details
 broker = "iot.eie.ucr.ac.cr"
@@ -17,42 +18,37 @@ def on_connect(client, userdata, flags, rc):
     else:
         print("Connection failed")
 
+# Set up serial connection
+ser = Serial('/dev/ttyACM1', 115200, timeout=1)
+sleep(2)
+
 # Set up the client
 client = mqtt.Client()
 client.username_pw_set(access_token)
 client.on_connect = on_connect
 client.connect(broker, port, keepalive=60)
 
-# Start the loop to handle callbacks
+# Start the loop to handle callbacks (blocking mode)
 client.loop_start()
 
-#try:
-while True:
-    # Generate random data
-    gyro_x = randint(-100, 100)
-    gyro_y = randint(-100, 100)
-    gyro_z = randint(-100, 100)
-    battery = battery + 0.25
+try:
+    while True:
+        # Read line
+        data = ser.readline().decode('utf-8').strip()
+        if data:
+            print(data)
+            data_to_send = data.split(': ')
+            label = data_to_send[0]
+            value = data_to_send[1]
 
-    # Publish each data point separately
-    client.publish(topic, dumps({"x": gyro_x}), qos=1)
-    print(f"Sent x: {gyro_x}")
-    
-    client.publish(topic, dumps({"y": gyro_y}), qos=1)
-    print(f"Sent y: {gyro_y}")
-    
-    client.publish(topic, dumps({"z": gyro_z}), qos=1)
-    print(f"Sent z: {gyro_z}")
+            # Publish data to MQTT broker
+            client.publish(topic, dumps({label: value}), qos=1)
 
-    client.publish(topic, dumps({"battery lvl": battery}), qos=1)
-    print(f"Sent battery lvl: {battery}")
+        #sleep(0.1)  # Allow time for publishing
 
-    # Wait 5 seconds before sending the next set of values
-    sleep(5)
+except KeyboardInterrupt:
+    print("Exiting program")
 
-# except KeyboardInterrupt:
-#     print("Stopped by user")
-
-# finally:
-#     client.loop_stop()  # Stop the loop
-#     client.disconnect()  # Disconnect from the broker
+finally:
+    client.loop_stop()  # Stop the loop when exiting
+    ser.close()
