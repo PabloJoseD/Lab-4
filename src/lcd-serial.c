@@ -412,7 +412,7 @@ int main(void)
 			console_puts2(girosDatos.coordenada_Z);
 			console_puts2("\n");
 
-			console_puts2("Tension bateria (V): ");
+			console_puts2("Voltaje: ");
 			console_puts2(nivel);
 			console_puts2("\n");
 		} else {
@@ -439,7 +439,7 @@ int main(void)
 		gfx_puts(girosDatos.coordenada_Z);
 
 		gfx_setCursor(15, 230);
-		gfx_puts("Tension bateria (V): ");
+		gfx_puts("Voltaje: ");
 		gfx_puts(nivel);
 
 

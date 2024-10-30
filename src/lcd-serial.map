@@ -1496,7 +1496,7 @@ LOAD /usr/lib/gcc/arm-none-eabi/12.2.1/../../../arm-none-eabi/lib/thumb/v7e-m+fp
 LOAD /usr/lib/gcc/arm-none-eabi/12.2.1/../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard/libc.a
 END GROUP
 
-.text           0x08000000     0x9a24
+.text           0x08000000     0x9a14
  *(.vectors)
  .vectors       0x08000000      0x1ac ../../../../../libopencm3//lib/libopencm3_stm32f4.a(vector.o)
                 0x08000000                vector_table
@@ -2124,103 +2124,103 @@ END GROUP
  .rodata.coordenadas.str1.1
                 0x080095c8        0x3 lcd-serial.o
  .rodata.main.str1.1
-                0x080095cb       0x32 lcd-serial.o
-                                 0x34 (size before relaxing)
+                0x080095cb       0x26 lcd-serial.o
+                                 0x28 (size before relaxing)
  .rodata.CSWTCH.2
-                0x080095fd        0x3 ../../../../../libopencm3//lib/libopencm3_stm32f4.a(fmc_common_f47.o)
+                0x080095f1        0x3 ../../../../../libopencm3//lib/libopencm3_stm32f4.a(fmc_common_f47.o)
  .rodata.rcc_hse_8mhz_3v3
-                0x08009600       0x70 ../../../../../libopencm3//lib/libopencm3_stm32f4.a(rcc.o)
-                0x08009600                rcc_hse_8mhz_3v3
+                0x080095f4       0x70 ../../../../../libopencm3//lib/libopencm3_stm32f4.a(rcc.o)
+                0x080095f4                rcc_hse_8mhz_3v3
  .rodata.str1.4
-                0x08009670       0x42 /usr/lib/gcc/arm-none-eabi/12.2.1/../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard/libc.a(lib_a-svfprintf.o)
- *fill*         0x080096b2        0x2 
- .rodata        0x080096b4       0x20 /usr/lib/gcc/arm-none-eabi/12.2.1/../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard/libc.a(lib_a-svfprintf.o)
+                0x08009664       0x42 /usr/lib/gcc/arm-none-eabi/12.2.1/../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard/libc.a(lib_a-svfprintf.o)
+ *fill*         0x080096a6        0x2 
+ .rodata        0x080096a8       0x20 /usr/lib/gcc/arm-none-eabi/12.2.1/../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard/libc.a(lib_a-svfprintf.o)
  .rodata.str1.4
-                0x080096d4       0x56 /usr/lib/gcc/arm-none-eabi/12.2.1/../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard/libc.a(lib_a-dtoa.o)
+                0x080096c8       0x56 /usr/lib/gcc/arm-none-eabi/12.2.1/../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard/libc.a(lib_a-dtoa.o)
                                  0x5a (size before relaxing)
- *fill*         0x0800972a        0x2 
- .rodata        0x0800972c        0x4 /usr/lib/gcc/arm-none-eabi/12.2.1/../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard/libc.a(lib_a-impure.o)
-                0x0800972c                _global_impure_ptr
+ *fill*         0x0800971e        0x2 
+ .rodata        0x08009720        0x4 /usr/lib/gcc/arm-none-eabi/12.2.1/../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard/libc.a(lib_a-impure.o)
+                0x08009720                _global_impure_ptr
  .rodata.str1.4
-                0x08009730       0x33 /usr/lib/gcc/arm-none-eabi/12.2.1/../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard/libc.a(lib_a-mprec.o)
+                0x08009724       0x33 /usr/lib/gcc/arm-none-eabi/12.2.1/../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard/libc.a(lib_a-mprec.o)
                                  0x47 (size before relaxing)
- *fill*         0x08009763        0x5 
- .rodata        0x08009768      0x128 /usr/lib/gcc/arm-none-eabi/12.2.1/../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard/libc.a(lib_a-mprec.o)
-                0x08009778                __mprec_tens
-                0x08009840                __mprec_tinytens
-                0x08009868                __mprec_bigtens
+ *fill*         0x08009757        0x1 
+ .rodata        0x08009758      0x128 /usr/lib/gcc/arm-none-eabi/12.2.1/../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard/libc.a(lib_a-mprec.o)
+                0x08009768                __mprec_tens
+                0x08009830                __mprec_tinytens
+                0x08009858                __mprec_bigtens
  .rodata.str1.4
-                0x08009890       0x2f /usr/lib/gcc/arm-none-eabi/12.2.1/../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard/libc.a(lib_a-svfiprintf.o)
- .rodata        0x08009890       0x20 /usr/lib/gcc/arm-none-eabi/12.2.1/../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard/libc.a(lib_a-svfiprintf.o)
+                0x08009880       0x2f /usr/lib/gcc/arm-none-eabi/12.2.1/../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard/libc.a(lib_a-svfiprintf.o)
+ .rodata        0x08009880       0x20 /usr/lib/gcc/arm-none-eabi/12.2.1/../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard/libc.a(lib_a-svfiprintf.o)
  .rodata.str1.4
-                0x080098b0       0x3f /usr/lib/gcc/arm-none-eabi/12.2.1/../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard/libc.a(lib_a-assert.o)
+                0x080098a0       0x3f /usr/lib/gcc/arm-none-eabi/12.2.1/../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard/libc.a(lib_a-assert.o)
                                  0x43 (size before relaxing)
- *fill*         0x080098ef        0x1 
+ *fill*         0x080098df        0x1 
  .rodata.str1.4
-                0x080098f0        0xe /usr/lib/gcc/arm-none-eabi/12.2.1/../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard/libc.a(lib_a-locale.o)
+                0x080098e0        0xe /usr/lib/gcc/arm-none-eabi/12.2.1/../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard/libc.a(lib_a-locale.o)
                                  0x12 (size before relaxing)
  .rodata.str1.4
-                0x080098fe       0x2f /usr/lib/gcc/arm-none-eabi/12.2.1/../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard/libc.a(lib_a-vfiprintf.o)
- *fill*         0x080098fe        0x2 
- .rodata        0x08009900       0x20 /usr/lib/gcc/arm-none-eabi/12.2.1/../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard/libc.a(lib_a-vfiprintf.o)
- .rodata        0x08009920      0x101 /usr/lib/gcc/arm-none-eabi/12.2.1/../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard/libc.a(lib_a-ctype_.o)
-                0x08009920                _ctype_
-                0x08009a24                        . = ALIGN (0x4)
- *fill*         0x08009a21        0x3 
+                0x080098ee       0x2f /usr/lib/gcc/arm-none-eabi/12.2.1/../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard/libc.a(lib_a-vfiprintf.o)
+ *fill*         0x080098ee        0x2 
+ .rodata        0x080098f0       0x20 /usr/lib/gcc/arm-none-eabi/12.2.1/../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard/libc.a(lib_a-vfiprintf.o)
+ .rodata        0x08009910      0x101 /usr/lib/gcc/arm-none-eabi/12.2.1/../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard/libc.a(lib_a-ctype_.o)
+                0x08009910                _ctype_
+                0x08009a14                        . = ALIGN (0x4)
+ *fill*         0x08009a11        0x3 
 
-.glue_7         0x08009a24        0x0
- .glue_7        0x08009a24        0x0 linker stubs
+.glue_7         0x08009a14        0x0
+ .glue_7        0x08009a14        0x0 linker stubs
 
-.glue_7t        0x08009a24        0x0
- .glue_7t       0x08009a24        0x0 linker stubs
+.glue_7t        0x08009a14        0x0
+ .glue_7t       0x08009a14        0x0 linker stubs
 
-.vfp11_veneer   0x08009a24        0x0
- .vfp11_veneer  0x08009a24        0x0 linker stubs
+.vfp11_veneer   0x08009a14        0x0
+ .vfp11_veneer  0x08009a14        0x0 linker stubs
 
-.v4_bx          0x08009a24        0x0
- .v4_bx         0x08009a24        0x0 linker stubs
+.v4_bx          0x08009a14        0x0
+ .v4_bx         0x08009a14        0x0 linker stubs
 
-.iplt           0x08009a24        0x0
- .iplt          0x08009a24        0x0 sdram.o
+.iplt           0x08009a14        0x0
+ .iplt          0x08009a14        0x0 sdram.o
 
-.rel.dyn        0x08009a24        0x0
- .rel.iplt      0x08009a24        0x0 sdram.o
+.rel.dyn        0x08009a14        0x0
+ .rel.iplt      0x08009a14        0x0 sdram.o
 
-.preinit_array  0x08009a24        0x0
-                0x08009a24                        . = ALIGN (0x4)
-                0x08009a24                        __preinit_array_start = .
+.preinit_array  0x08009a14        0x0
+                0x08009a14                        . = ALIGN (0x4)
+                0x08009a14                        __preinit_array_start = .
  *(.preinit_array)
-                0x08009a24                        __preinit_array_end = .
+                0x08009a14                        __preinit_array_end = .
 
-.init_array     0x08009a24        0x0
-                0x08009a24                        . = ALIGN (0x4)
-                0x08009a24                        __init_array_start = .
+.init_array     0x08009a14        0x0
+                0x08009a14                        . = ALIGN (0x4)
+                0x08009a14                        __init_array_start = .
  *(SORT_BY_NAME(.init_array.*))
  *(.init_array)
-                0x08009a24                        __init_array_end = .
+                0x08009a14                        __init_array_end = .
 
-.fini_array     0x08009a24        0x0
-                0x08009a24                        . = ALIGN (0x4)
-                0x08009a24                        __fini_array_start = .
+.fini_array     0x08009a14        0x0
+                0x08009a14                        . = ALIGN (0x4)
+                0x08009a14                        __fini_array_start = .
  *(.fini_array)
  *(SORT_BY_NAME(.fini_array.*))
-                0x08009a24                        __fini_array_end = .
+                0x08009a14                        __fini_array_end = .
 
 .ARM.extab
  *(.ARM.extab*)
 
-.ARM.exidx      0x08009a24        0x0
-                0x08009a24                        __exidx_start = .
+.ARM.exidx      0x08009a14        0x0
+                0x08009a14                        __exidx_start = .
  *(.ARM.exidx*)
-                0x08009a24                        __exidx_end = .
-                0x08009a24                        . = ALIGN (0x4)
-                0x08009a24                        _etext = .
+                0x08009a14                        __exidx_end = .
+                0x08009a14                        . = ALIGN (0x4)
+                0x08009a14                        _etext = .
 
 .noinit
  *(.noinit*)
-                0x08009a24                        . = ALIGN (0x4)
+                0x08009a14                        . = ALIGN (0x4)
 
-.data           0x20000000      0x9d4 load address 0x08009a24
+.data           0x20000000      0x9d4 load address 0x08009a14
                 0x20000000                        _data = .
  *(.data*)
  .data.timing   0x20000000       0x1c sdram.o
@@ -2244,12 +2244,12 @@ END GROUP
  *(.ramtext*)
                 0x200009d4                        . = ALIGN (0x4)
                 0x200009d4                        _edata = .
-                0x08009a24                        _data_loadaddr = LOADADDR (.data)
+                0x08009a14                        _data_loadaddr = LOADADDR (.data)
 
-.igot.plt       0x200009d4        0x0 load address 0x0800a3f8
+.igot.plt       0x200009d4        0x0 load address 0x0800a3e8
  .igot.plt      0x200009d4        0x0 sdram.o
 
-.bss            0x200009d4       0xe4 load address 0x0800a3f8
+.bss            0x200009d4       0xe4 load address 0x0800a3e8
  *(.bss*)
  .bss.system_millis
                 0x200009d4        0x4 clock.o
