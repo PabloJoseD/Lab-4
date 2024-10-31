@@ -18,7 +18,7 @@ def on_connect(client, userdata, flags, rc):
         print("Connection failed")
 
 # Set up serial connection
-ser = Serial('/dev/ttyACM1', 115200, timeout=1)
+ser = Serial('/dev/ttyACM0', 115200, timeout=1)
 sleep(2)
 
 # Set up the client
