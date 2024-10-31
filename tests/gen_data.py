@@ -7,13 +7,15 @@ import random
 ser = serial.Serial('/dev/ttyACM0', 115200, timeout=1)
 time.sleep(2)  # Wait for the serial connection to initialize
 
+battery = 9
+
 try:
     while True:
         # Generate random values for x, y, z, and battery
         x = random.uniform(-100, 100)
         y = random.uniform(-100, 100)
         z = random.uniform(-100, 100)
-        battery = random.randint(0, 9)
+        battery = battery - 0.001
 
         # Format data as "x,y,z,battery"
         data_x= f"x: {x:.2f}\n"
@@ -23,12 +25,16 @@ try:
         
         # Send data to the serial port
         ser.write(data_x.encode('utf-8'))
+        print(data_x)
         time.sleep(0.1)
         ser.write(data_y.encode('utf-8'))
+        print(data_y)
         time.sleep(0.1)
         ser.write(data_z.encode('utf-8'))
+        print(data_z)
         time.sleep(0.1)
         ser.write(data_battery.encode('utf-8'))
+        print(data_battery)
         time.sleep(0.1)
 
         # Wait a moment before sending the next value

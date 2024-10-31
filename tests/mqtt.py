@@ -9,7 +9,6 @@ broker = "iot.eie.ucr.ac.cr"
 port = 1883
 topic = "v1/devices/me/telemetry"
 access_token = "YI3VpgHK1lc5iCwO2JvR"
-battery = 0
 
 # Callback for connection
 def on_connect(client, userdata, flags, rc):
